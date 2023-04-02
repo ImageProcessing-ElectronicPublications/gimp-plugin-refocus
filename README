@@ -1,0 +1,18 @@
+The Refocus Gimp plug-in can be used to sharpen images.  Frequently,
+when processing images, e.g. scanning photo's or slides, the images
+become slightly blurred.  This plug-in attempts to "refocus" the
+image.  In many cases this plug-in produces much better results than
+plug-ins such as sharpen or unsharp mask.
+
+This plug-in has a preview that helps you select the best parameters.
+
+This version of the plug-in needs the Gtk+-2.0 libraries.
+
+You can find instructions for installing and using Refocus
+in the files doc.html or doc.pdf in the doc subdirectory.
+
+This is the first public release of this plug-in.  I hope you like it.
+If you have any problems or requests please mail me.
+
+
+Ernst Lippe <ernstl@users.sourceforge.net>
