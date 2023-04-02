@@ -140,7 +140,10 @@ fix_left_boundary (TileStripBuffer * buf, const gint x_lo, const gint y_start,
 
         for (x = x_lo - 1; x >= buf->real_x; x--)
         {
-            copy_col (buf, 2 * x_lo - x, y_start, y_end - y_start, x);
+            gint sx = 2 * x_lo - x;
+            copy_col (buf,
+                      sx<=buf->real_x+buf->real_width-1?sx:buf->real_x+buf->real_width-1,
+                      y_start, y_end - y_start, x);
         };
     }
     break;
@@ -171,7 +174,9 @@ fix_right_boundary (TileStripBuffer * buf, const gint x_hi,
 
         for (x = x_hi; x < buf->real_x + buf->real_width; x++)
         {
-            copy_col (buf, 2 * (x_hi - 1) - x, y_start, y_end - y_start, x);
+            gint sx = 2 * (x_hi - 1) - x;
+            copy_col (buf, sx>=buf->real_x?sx:buf->real_x,
+                      y_start, y_end - y_start, x);
         };
     }
     break;
@@ -200,7 +205,10 @@ fix_top_boundary (TileStripBuffer * buf, const gint y_lo)
 
         for (y = y_lo - 1; y >= buf->real_y; y--)
         {
-            copy_row (buf, buf->real_x, 2 * y_lo - y, buf->real_width, y);
+            gint sy = 2 * y_lo - y;
+            copy_row (buf, buf->real_x,
+                      sy<=buf->real_y+buf->real_height-1?sy:buf->real_y+buf->real_height-1,
+                      buf->real_width, y);
         };
     }
     break;
@@ -230,8 +238,9 @@ fix_bottom_boundary (TileStripBuffer * buf, const gint y_hi)
 
         for (y = y_hi; y < buf->real_y + buf->real_height; y++)
         {
-            copy_row (buf, buf->real_x, 2 * (y_hi - 1) - y, buf->real_width,
-                      y);
+            gint sy = 2 * (y_hi - 1) - y;
+            copy_row (buf, buf->real_x, sy>=buf->real_y?sy:buf->real_y,
+                      buf->real_width, y);
         };
     }
     break;

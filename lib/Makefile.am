@@ -1,4 +1,4 @@
-CFLAGS=-fomit-frame-pointer -O3 -funroll-all-loops
+AM_CFLAGS=-fomit-frame-pointer -O3 -funroll-all-loops
 
 
 noinst_LIBRARIES = liblapack.a libatlas.a libcblas.a

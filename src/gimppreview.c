@@ -36,18 +36,18 @@ static char vcid[] = "$Id: gimppreview.c,v 1.1.1.1 2003/01/30 21:30:18 ernstl Ex
 #include "gimppreview.h"
 
 
-static void gimp_preview_init (GimpPreview * preview);
-static void gimp_preview_class_init (GimpPreviewClass * klass);
+static void gimp_preview_init (GimpPreview_ROZEN * preview);
+static void gimp_preview_class_init (GimpPreviewClass_ROZEN * klass);
 
 static void gimp_preview_plus_callback (GtkWidget * widget, gpointer data);
 static void gimp_preview_minus_callback (GtkWidget * widget, gpointer data);
 static gint gimp_preview_event (GtkWidget * widget, GdkEvent * event,
                                 gpointer data);
-static void gimp_preview_recompute_sizes (GimpPreview * preview,
+static void gimp_preview_recompute_sizes (GimpPreview_ROZEN * preview,
         gdouble newscale);
-static void gimp_preview_update_preview (GimpPreview * preview);
+static void gimp_preview_update_preview (GimpPreview_ROZEN * preview);
 
-static void gimp_preview_image_set_size (GimpPreview * preview, gint width,
+static void gimp_preview_image_set_size (GimpPreview_ROZEN * preview, gint width,
         gint height);
 static void gimp_preview_size_request (GtkWidget * widget,
                                        GtkRequisition * requisition);
@@ -58,7 +58,7 @@ static void gimp_preview_forall (GtkContainer * container,
                                  GtkCallback callback,
                                  gpointer callback_data);
 gboolean gimp_preview_update_preview_idle_fun (gpointer data);
-void gimp_preview_schedule_update (GimpPreview * preview);
+void gimp_preview_schedule_update (GimpPreview_ROZEN * preview);
 
 #define PROGRESS_BAR_HEIGHT (10)
 #define PREVIEW_SIZE (100)
@@ -99,7 +99,7 @@ static guint gimp_preview_signals[LAST_SIGNAL] = { 0 };
  * data!
  */
 #define PREVIEW_DATA(preview) \
-        ((GimpPreviewData*)(GIMP_PREVIEW (preview)->private_data))
+        ((GimpPreviewData*)(GIMP_PREVIEW_ROZEN (preview)->private_data))
 
 typedef struct
 {
@@ -157,13 +157,13 @@ gimp_preview_get_type (void)
     {
         GTypeInfo preview_info =
         {
-            sizeof (GimpPreviewClass),
+            sizeof (GimpPreviewClass_ROZEN),
             (GBaseInitFunc) NULL,
             (GBaseFinalizeFunc) NULL,
             (GClassInitFunc) gimp_preview_class_init,
             (GClassFinalizeFunc) NULL,
             (gconstpointer) NULL,   /* class_data */
-            sizeof (GimpPreview),
+            sizeof (GimpPreview_ROZEN),
             0,                      /* n_preallocs */
             (GInstanceInitFunc) gimp_preview_init,
             (GTypeValueTable *) NULL /* value_table */
@@ -183,7 +183,7 @@ gimp_preview_get_type (void)
  * by GTK's internal mechanisms.
  */
 static void
-gimp_preview_class_init (GimpPreviewClass * klass)
+gimp_preview_class_init (GimpPreviewClass_ROZEN * klass)
 {
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
     GtkContainerClass *container_class = GTK_CONTAINER_CLASS (klass);
@@ -192,7 +192,7 @@ gimp_preview_class_init (GimpPreviewClass * klass)
         g_signal_new ("update_preview",
                       G_TYPE_FROM_CLASS (klass),
                       G_SIGNAL_RUN_FIRST,
-                      G_STRUCT_OFFSET (GimpPreviewClass, update_preview),
+                      G_STRUCT_OFFSET (GimpPreviewClass_ROZEN, update_preview),
                       NULL,
                       NULL,
                       g_cclosure_marshal_VOID__POINTER,
@@ -202,7 +202,7 @@ gimp_preview_class_init (GimpPreviewClass * klass)
         g_signal_new ("preview_changed",
                       G_TYPE_FROM_CLASS (klass),
                       G_SIGNAL_RUN_FIRST,
-                      G_STRUCT_OFFSET (GimpPreviewClass, preview_changed),
+                      G_STRUCT_OFFSET (GimpPreviewClass_ROZEN, preview_changed),
                       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
     klass->update_preview = NULL;
@@ -214,7 +214,7 @@ gimp_preview_class_init (GimpPreviewClass * klass)
 
 
 void
-gimp_preview_set_scale_amount(GimpPreview *preview, gdouble scale_amount)
+gimp_preview_set_scale_amount(GimpPreview_ROZEN *preview, gdouble scale_amount)
 {
     /*
      * If the caller wants to set the scale amount, let them do so.
@@ -271,7 +271,7 @@ gimp_preview_set_scale_amount(GimpPreview *preview, gdouble scale_amount)
  * by GTK's internal mechanisms.
  */
 static void
-gimp_preview_init (GimpPreview * preview)
+gimp_preview_init (GimpPreview_ROZEN * preview)
 {
     gchar buffer[10];
 
@@ -309,7 +309,7 @@ GtkWidget *
 gimp_preview_new_with_args (GimpDrawable * drawable, gint cb_preview_size,
                             gdouble cb_scale_amount, gint cb_allow_scale)
 {
-    GimpPreview *preview;
+    GimpPreview_ROZEN *preview;
     GtkWidget *frame;
     GtkWidget *hbox;
     GtkWidget *event_box;
@@ -339,14 +339,14 @@ gimp_preview_new_with_args (GimpDrawable * drawable, gint cb_preview_size,
 
 
     /* Now allocate the actual preview window. */
-    preview = GIMP_PREVIEW (g_object_new (gimp_preview_get_type (), NULL));
+    preview = GIMP_PREVIEW_ROZEN (g_object_new (gimp_preview_get_type (), NULL));
 
     /* Set the scale amount. */
     gimp_preview_set_scale_amount(preview, cb_scale_amount);
 
     /* Save the drawable info. */
     preview->drawable = drawable;
-    preview->drawable_has_alpha = gimp_drawable_has_alpha (drawable->id);
+    preview->drawable_has_alpha = gimp_drawable_has_alpha (drawable->drawable_id);
 
     /* Calculate our preview size. */
     if (preview_size == PREVIEW_FIXED_SIZE)
@@ -354,8 +354,8 @@ gimp_preview_new_with_args (GimpDrawable * drawable, gint cb_preview_size,
         preview_width = i2p (drawable->width, preview->scale);
         preview_height = i2p (drawable->height, preview->scale);
 
-        GIMP_PREVIEW (preview)->width = preview_width;
-        GIMP_PREVIEW (preview)->height = preview_height;
+        GIMP_PREVIEW_ROZEN (preview)->width = preview_width;
+        GIMP_PREVIEW_ROZEN (preview)->height = preview_height;
     }
     else
     {
@@ -456,7 +456,7 @@ gimp_preview_new_with_args (GimpDrawable * drawable, gint cb_preview_size,
 static void
 gimp_preview_size_request (GtkWidget * widget, GtkRequisition * requisition)
 {
-    GimpPreview *preview = GIMP_PREVIEW (widget);
+    GimpPreview_ROZEN *preview = GIMP_PREVIEW_ROZEN (widget);
     GtkRequisition resize_box_requisition;
 
 #ifdef PREVIEW_DEBUG
@@ -480,7 +480,7 @@ gimp_preview_size_request (GtkWidget * widget, GtkRequisition * requisition)
 static void
 gimp_preview_size_allocate (GtkWidget * widget, GtkAllocation * allocation)
 {
-    GimpPreview *preview = GIMP_PREVIEW (widget);
+    GimpPreview_ROZEN *preview = GIMP_PREVIEW_ROZEN (widget);
     GtkAllocation resize_box_allocation, progress_bar_allocation,
                   event_box_allocation;
     GtkRequisition resize_box_requisition;
@@ -545,7 +545,7 @@ gimp_preview_forall (GtkContainer * container,
                      gboolean include_internals,
                      GtkCallback callback, gpointer callback_data)
 {
-    GimpPreview *preview = GIMP_PREVIEW (container);
+    GimpPreview_ROZEN *preview = GIMP_PREVIEW_ROZEN (container);
 
     if (PREVIEW_DATA (preview)->resize_box)
     {
@@ -566,7 +566,7 @@ gimp_preview_forall (GtkContainer * container,
  * Plug-ins call this to do an update of the preview area.
  */
 void
-gimp_preview_update (GimpPreview * preview)
+gimp_preview_update (GimpPreview_ROZEN * preview)
 {
     gimp_preview_recompute_sizes (preview, preview->scale);
     gimp_preview_update_preview (preview);
@@ -581,11 +581,11 @@ gimp_preview_update (GimpPreview * preview)
 static void
 gimp_preview_plus_callback (GtkWidget * widget, gpointer data)
 {
-    GimpPreview *preview;
+    GimpPreview_ROZEN *preview;
     gchar buffer[10];
     gdouble new_scale;
 
-    preview = GIMP_PREVIEW (data);
+    preview = GIMP_PREVIEW_ROZEN (data);
     if (PREVIEW_DATA (preview)->scale_n == PREVIEW_SCALE_LAST)
         return;
 
@@ -618,11 +618,11 @@ gimp_preview_plus_callback (GtkWidget * widget, gpointer data)
 static void
 gimp_preview_minus_callback (GtkWidget * widget, gpointer data)
 {
-    GimpPreview *preview;
+    GimpPreview_ROZEN *preview;
     gchar buffer[10];
     gdouble new_scale;
 
-    preview = GIMP_PREVIEW (data);
+    preview = GIMP_PREVIEW_ROZEN (data);
     if (PREVIEW_DATA (preview)->scale_n == 0)
         return;
 
@@ -653,12 +653,12 @@ gimp_preview_minus_callback (GtkWidget * widget, gpointer data)
 static gint
 gimp_preview_event (GtkWidget * widget, GdkEvent * event, gpointer data)
 {
-    GimpPreview *preview;
+    GimpPreview_ROZEN *preview;
     GdkEventButton *button_event;
     gint x, y;
     gint dx, dy;
 
-    preview = GIMP_PREVIEW (data);
+    preview = GIMP_PREVIEW_ROZEN (data);
     button_event = (GdkEventButton *) event;
 
     switch (event->type)
@@ -735,7 +735,7 @@ gimp_preview_event (GtkWidget * widget, GdkEvent * event, gpointer data)
  * This function is also used for initializing the preview.
  */
 static void
-gimp_preview_recompute_sizes (GimpPreview * preview, gdouble new_scale)
+gimp_preview_recompute_sizes (GimpPreview_ROZEN * preview, gdouble new_scale)
 {
 
     /* The center of the preview in image coordinates.
@@ -767,7 +767,7 @@ gimp_preview_recompute_sizes (GimpPreview * preview, gdouble new_scale)
 }
 
 void
-gimp_preview_generate_update_event (GimpPreview * preview)
+gimp_preview_generate_update_event (GimpPreview_ROZEN * preview)
 /* Signal the user that the preview must be updated */
 {
     const gdouble scale = preview->scale;
@@ -816,7 +816,7 @@ gimp_preview_generate_update_event (GimpPreview * preview)
  * to step through source and destination!
  */
 static void
-gimp_preview_update_preview (GimpPreview * preview)
+gimp_preview_update_preview (GimpPreview_ROZEN * preview)
 {
     GimpPixelRgn region;
     guchar *image_data = NULL;
@@ -1024,7 +1024,7 @@ gimp_preview_force_redraw (GimpPreview * preview)
 gboolean
 gimp_preview_update_preview_idle_fun (gpointer data)
 {
-    GimpPreview *preview = GIMP_PREVIEW (data);
+    GimpPreview_ROZEN *preview = GIMP_PREVIEW_ROZEN (data);
     gint event_id = PREVIEW_DATA (preview)->current_event_id;
 
 #ifdef PREVIEW_DEBUG
@@ -1043,7 +1043,7 @@ gimp_preview_update_preview_idle_fun (gpointer data)
 }
 
 void
-gimp_preview_schedule_update (GimpPreview * preview)
+gimp_preview_schedule_update (GimpPreview_ROZEN * preview)
 {
     PREVIEW_DATA (preview)->current_event_id++;
 
@@ -1084,7 +1084,7 @@ gimp_preview_image_draw_row (GtkWidget * image, guchar * data,
 }
 
 void
-gimp_preview_image_set_size (GimpPreview * preview, gint width, gint height)
+gimp_preview_image_set_size (GimpPreview_ROZEN * preview, gint width, gint height)
 {
     const gint real_width = MIN (preview->max_width, width);
     const gint real_height = MIN (preview->max_height, height);
@@ -1139,7 +1139,7 @@ gimp_preview_image_set_size (GimpPreview * preview, gint width, gint height)
  * with the same event-id will be ignored by the preview.
  **/
 gboolean
-gimp_preview_draw_row (GimpPreview * preview, const gint event_id,
+gimp_preview_draw_row (GimpPreview_ROZEN * preview, const gint event_id,
                        GimpImageType type, gint row,
                        const guchar * const data)
 {
@@ -1269,7 +1269,7 @@ gimp_preview_draw_row (GimpPreview * preview, const gint event_id,
  * with the same event-id will be ignored by the preview.
  **/
 gboolean
-gimp_preview_draw_unscaled_row (GimpPreview * preview, const gint event_id,
+gimp_preview_draw_unscaled_row (GimpPreview_ROZEN * preview, const gint event_id,
                                 GimpImageType type, const gint row,
                                 const guchar * const data)
 {
@@ -1458,7 +1458,7 @@ gimp_preview_draw_unscaled_row (GimpPreview * preview, const gint event_id,
  * with the same event-id will be ignored by the preview.
  **/
 gboolean
-gimp_preview_progress_set_fraction (GimpPreview * preview,
+gimp_preview_progress_set_fraction (GimpPreview_ROZEN * preview,
                                     const gint event_id, double fraction)
 {
     const gboolean return_status =

@@ -27,21 +27,21 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <libgimp/gimp.h>
 #include <libgimp/gimpui.h>
-
 G_BEGIN_DECLS
 
 #define PREVIEW_FIXED_SIZE           0
 #define PREVIEW_DEFAULT_SIZE         -1
 #define GIMP_TYPE_PREVIEW            (gimp_preview_get_type ())
-#define GIMP_PREVIEW(obj)            (GTK_CHECK_CAST ((obj), GIMP_TYPE_PREVIEW, GimpPreview))
-#define GIMP_PREVIEW_CLASS(klass)    (GTK_CHECK_CLASS_CAST ((klass), GIMP_TYPE_PREVIEW, GimpPreviewClass))
-#define GIMP_IS_PREVIEW(obj)         (GTK_CHECK_TYPE ((obj), GIMP_TYPE_PREVIEW))
-#define GIMP_IS_PREVIEW_CLASS(klass) (GTK_CHECK_CLASS_TYPE ((klass), GIMP_TYPE_PREVIEW))
-typedef struct _GimpPreview GimpPreview;
-typedef struct _GimpPreviewClass GimpPreviewClass;
+#define GIMP_PREVIEW_ROZEN(obj)            (GTK_CHECK_CAST ((obj), GIMP_TYPE_PREVIEW, GimpPreview_ROZEN))
+#define GIMP_PREVIEW_CLASS_ROZEN(klass)    (GTK_CHECK_CLASS_CAST ((klass), GIMP_TYPE_PREVIEW, GimpPreviewClass_ROZEN))
+#define GIMP_IS_PREVIEW_ROZEN(obj)         (GTK_CHECK_TYPE ((obj), GIMP_TYPE_PREVIEW))
+#define GIMP_IS_PREVIEW_CLASS_ROZEN(klass) (GTK_CHECK_CLASS_TYPE ((klass), GIMP_TYPE_PREVIEW))
+typedef struct _GimpPreview_ROZEN GimpPreview_ROZEN;
+typedef struct _GimpPreviewClass_ROZEN GimpPreviewClass_ROZEN;
+
 typedef struct _GimpPreviewEvent GimpPreviewEvent;
 
-struct _GimpPreviewClass
+struct _GimpPreviewClass_ROZEN
 {
     GtkContainerClass parent_class;
 
@@ -50,7 +50,7 @@ struct _GimpPreviewClass
 };
 
 
-struct _GimpPreview
+struct _GimpPreview_ROZEN
 {
     GtkContainer parent;
 
@@ -73,6 +73,7 @@ struct _GimpPreview
 
     gpointer private_data;
 };
+
 
 /**
  * GimpPreviewEvent:
@@ -113,22 +114,23 @@ GtkWidget *gimp_preview_new_with_args (GimpDrawable * drawable,
                                        gint preview_size,
                                        gdouble scale_amount,
                                        gint allow_scale);
-void gimp_preview_update (GimpPreview * preview);
+void gimp_preview_update (GimpPreview_ROZEN * preview);
 
-gboolean gimp_preview_draw_row (GimpPreview * preview, const gint event_id,
+gboolean gimp_preview_draw_row (GimpPreview_ROZEN * preview, const gint event_id,
                                 GimpImageType type, const gint row,
                                 const guchar * const data);
 
-gboolean gimp_preview_draw_unscaled_row (GimpPreview * preview,
+gboolean gimp_preview_draw_unscaled_row (GimpPreview_ROZEN * preview,
         const gint event_id,
         GimpImageType type, const gint row,
         const guchar * const data);
 
 void gimp_preview_force_redraw (GimpPreview * preview);
 
-gboolean gimp_preview_progress_set_fraction (GimpPreview * preview,
+gboolean gimp_preview_progress_set_fraction (GimpPreview_ROZEN * preview,
         const gint event_id,
         double fraction);
 
 G_END_DECLS
+
 #endif /* __GIMP_PREVIEW_H__ */

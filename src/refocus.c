@@ -45,9 +45,9 @@ GimpDrawable *drawable;
 
 /* Declare local functions. */
 static void query (void);
-static void run (char *name,
+static void run (const gchar *name,
                  gint nparams,
-                 GimpParam * param,
+                 const GimpParam * param,
                  gint * nreturn_vals, GimpParam ** return_vals);
 static gint dialog ();
 static void doit (void);
@@ -114,7 +114,6 @@ static void query ()
         {GIMP_PDB_FLOAT, "noise", "Noise to Signal ratio"},
     };
     static GimpParamDef *return_vals = NULL;
-    static gint nargs = (gint) (sizeof (args) / sizeof (args[0]));
     static gint nreturn_vals = 0;
 
     gimp_install_procedure ("plug_in_refocus",
@@ -126,15 +125,15 @@ static void query ()
                             "<Image>/Filters/Enhance/Refocus ...",
                             "RGB*, GRAY*",
                             GIMP_PLUGIN,
-                            nargs, nreturn_vals, args, return_vals);
+                            G_N_ELEMENTS(args), nreturn_vals, args, return_vals);
 }
 
 static void
-run (char *name, gint n_params, GimpParam * param,
+run (const gchar *name, gint n_params, const GimpParam * param,
      gint * nreturn_vals, GimpParam ** return_vals)
 {
     static GimpParam values[1];
-    GimpRunModeType run_mode;
+    GimpRunMode run_mode;
     GimpPDBStatusType status = GIMP_PDB_SUCCESS;
 
     (void) name;                  /* Shut up warnings about unused parameters. */
@@ -189,8 +188,8 @@ run (char *name, gint n_params, GimpParam * param,
     {
 
         /*  Make sure that the drawable is gray or RGB color  */
-        if (gimp_drawable_is_rgb (drawable->id) ||
-                gimp_drawable_is_gray (drawable->id))
+        if (gimp_drawable_is_rgb (drawable->drawable_id) ||
+                gimp_drawable_is_gray (drawable->drawable_id))
         {
             doit ();
 
@@ -339,7 +338,7 @@ update_callback (GtkWidget * widget, gpointer data)
     (void) data;
     set_busy_cursor (widget, TRUE);
     update_matrix ();
-    gimp_preview_update (GIMP_PREVIEW (my_widgets.preview));
+    gimp_preview_update (GIMP_PREVIEW_ROZEN (my_widgets.preview));
     set_busy_cursor (widget, FALSE);
 }
 
@@ -372,7 +371,7 @@ preview_progress_update_fun (const gpointer data, double arg)
 {
     gint event_id = GPOINTER_TO_INT (data);
     return (gimp_preview_progress_set_fraction
-            (GIMP_PREVIEW (my_widgets.preview), event_id, arg));
+            (GIMP_PREVIEW_ROZEN (my_widgets.preview), event_id, arg));
 }
 
 static void
@@ -396,7 +395,7 @@ preview_callback (GtkWidget * widget, GimpPreviewEvent * event, gpointer data)
                                         im_width, im_height);
         tile_sink_init_for_preview (&sink, drawable, image_x, image_y,
                                     im_width, im_height);
-        gimp_preview_progress_set_fraction (GIMP_PREVIEW (my_widgets.preview),
+        gimp_preview_progress_set_fraction (GIMP_PREVIEW_ROZEN (my_widgets.preview),
                                             event->event_id, 0);
         bd_closure_init (&update_progress_closure,
                          preview_progress_update_fun,
@@ -412,10 +411,10 @@ preview_callback (GtkWidget * widget, GimpPreviewEvent * event, gpointer data)
         {
             tile_sink_get_row (&sink, buf, image_x, image_y + row, im_width);
             event_is_current =
-                gimp_preview_draw_unscaled_row (GIMP_PREVIEW (my_widgets.preview),
-                                                event->event_id,
-                                                gimp_drawable_type (drawable->id),
-                                                row, buf);
+                gimp_preview_draw_unscaled_row(GIMP_PREVIEW_ROZEN(my_widgets.preview),
+                                               event->event_id,
+                                               gimp_drawable_type (drawable->drawable_id),
+                                               row, buf);
         };
         g_free (buf);
         tile_sink_free_buffers (&sink);
@@ -586,7 +585,7 @@ dialog ()
 
     gtk_widget_show (dlg);
     redraw_all ();
-    gimp_preview_update (GIMP_PREVIEW (preview));
+    gimp_preview_update (GIMP_PREVIEW_ROZEN (preview));
     gtk_main ();
     gdk_flush ();
     return run_flag;
@@ -611,7 +610,7 @@ doit (void)
     gimp_progress_init ("Computing matrix");
     update_matrix ();
     gimp_progress_init ("Applying convolution");
-    gimp_drawable_mask_bounds (drawable->id, &sx1, &sy1, &sx2, &sy2);
+    gimp_drawable_mask_bounds (drawable->drawable_id, &sx1, &sy1, &sx2, &sy2);
     width = sx2 - sx1;
     height = sy2 - sy1;
     tile_source_init_from_drawable (&source, drawable, sx1, sy1, width, height);
@@ -621,7 +620,7 @@ doit (void)
                     matrix, 2 * my_config.mat_width + 1,
                     &update_progress_closure);
     gimp_drawable_flush (drawable);
-    gimp_drawable_merge_shadow (drawable->id, TRUE);
-    gimp_drawable_update (drawable->id, sx1, sy1, width, height);
+    gimp_drawable_merge_shadow (drawable->drawable_id, TRUE);
+    gimp_drawable_update (drawable->drawable_id, sx1, sy1, width, height);
     g_free (matrix);
 }
