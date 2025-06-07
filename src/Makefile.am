@@ -5,7 +5,7 @@ INCLUDES=@GTK_CFLAGS@ @GIMP_CFLAGS@ -I @LAPACK_INCLUDE_DIR@
 bin_PROGRAMS = refocus
 noinst_PROGRAMS = test-matrix
 
-ldadd_atlas=-L@LAPACK_LIB_DIR@ -llapack -lcblas -latlas
+ldadd_atlas=-L@LAPACK_LIB_DIR@ -llapack -lcblas -latlas -lm
 
 noinst_HEADERS=bdclosure.h refocus.h matrix.h tilebuf.h conv.h fwlapack.h gimppreview.h prevman.h util.h
 EXTRA_DIST = dummy-plugin.c

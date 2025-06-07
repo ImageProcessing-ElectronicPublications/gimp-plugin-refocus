@@ -41,6 +41,8 @@
 static char vcid[] GCC_UNUSED = "$Id: refocus.c,v 1.1.1.1 2003/01/30 21:30:19 ernstl Exp $";
 #endif /* lint */
 
+#define RADIUS_MAX 50.0
+
 GimpDrawable *drawable;
 
 /* Declare local functions. */
@@ -515,7 +517,7 @@ dialog ()
     gtk_widget_show (label);
 
     my_widgets.mat_width_entry = entry =
-                                     gtk_spin_button_new_with_range (0.0, 25.0, 1.0);
+                                     gtk_spin_button_new_with_range (0.0, RADIUS_MAX, 1.0);
     gtk_spin_button_set_digits (GTK_SPIN_BUTTON (entry), 0);
     gtk_table_attach_defaults (GTK_TABLE (table), entry, 1, 2, 0, 1);
     g_signal_connect (G_OBJECT (entry), "changed",
@@ -529,7 +531,7 @@ dialog ()
     gtk_widget_show (label);
 
     my_widgets.radius_entry = entry =
-                                  gtk_spin_button_new_with_range (0.0, 25.0, 0.1);
+                                  gtk_spin_button_new_with_range (0.0, RADIUS_MAX, 0.1);
     gtk_table_attach_defaults (GTK_TABLE (table), entry, 1, 2, 1, 2);
     gtk_spin_button_set_digits (GTK_SPIN_BUTTON (entry), 2);
     g_signal_connect (G_OBJECT (entry), "changed",
@@ -543,7 +545,7 @@ dialog ()
     gtk_widget_show (label);
 
     my_widgets.alpha_entry = entry =
-                                 gtk_spin_button_new_with_range (0.0, 25.0, 0.1);
+                                 gtk_spin_button_new_with_range (0.0, RADIUS_MAX, 0.1);
     gtk_spin_button_set_digits (GTK_SPIN_BUTTON (entry), 2);
     gtk_table_attach_defaults (GTK_TABLE (table), entry, 1, 2, 2, 3);
     g_signal_connect (G_OBJECT (entry), "changed",
